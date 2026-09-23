@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # Crouket Node.js Backend Service
+  # -------------------------------------------------------------
+  crouket-backend:
+    build: .
+    container_name: crouket-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - JWT_SECRET=crouket_secret_super_key_2026_production
+      - BASE_URL=http://localhost:3000
+      - DB1_PATH=/app/data/crouket_users.db
+      - DB2_STORAGE_DIR=/app/storage/media
+    volumes:
+      - crouket_db1_data:/app/data
+      - crouket_db2_media:/app/storage/media
+    depends_on:
+      - minio-storage
+
+  # -------------------------------------------------------------
+  # DB 2: MinIO S3-Compatible Object Database (Media Store)
+  # -------------------------------------------------------------
+  minio-storage:
+    image: minio/minio:latest
+    container_name: crouket-minio-db2
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+volumes:
+  crouket_db1_data:
+  crouket_db2_media:
+  minio_data:
+

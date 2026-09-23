@@ -3,6 +3,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'forgot_password_page.dart';
+import 'screens/home_screen.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -259,7 +262,7 @@ class _Brand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'S L A T E',
+      'C R O U K E T',
       style: TextStyle(
         color: Colors.white,
         fontSize: fontSize,
@@ -409,7 +412,17 @@ class _AuthForm extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: isLoading ? null : () {},
+                            key: const ValueKey('forgotPasswordButton'),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const ForgotPasswordPage(),
+                                      ),
+                                    );
+                                  },
                             style: TextButton.styleFrom(
                               foregroundColor: const Color(0xFF303030),
                               minimumSize: Size.zero,
@@ -764,10 +777,10 @@ class _WelcomePage extends StatelessWidget {
               opacity: value.clamp(0.0, 1.0),
               child: Transform.scale(scale: 0.75 + value * 0.25, child: child),
             ),
-            child: const Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 34,
                   backgroundColor: Colors.black,
                   child: Icon(
@@ -776,15 +789,34 @@ class _WelcomePage extends StatelessWidget {
                     size: 36,
                   ),
                 ),
-                SizedBox(height: 20),
-                Text(
-                  'Welcome to SLATE',
+                const SizedBox(height: 20),
+                const Text(
+                  'Welcome to Crouket',
                   style: TextStyle(fontSize: 23, fontWeight: FontWeight.w600),
                 ),
-                SizedBox(height: 7),
-                Text(
+                const SizedBox(height: 7),
+                const Text(
                   'Everything is ready for you.',
                   style: TextStyle(color: Color(0xFF8C8C8C), fontSize: 13),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  key: const ValueKey('enterAppButton'),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text('Vào ứng dụng Crouket'),
                 ),
               ],
             ),

@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Slate',
+      title: 'Crouket',
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF8F7F5),

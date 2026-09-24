@@ -8,7 +8,9 @@ import '../models/transaction_model.dart';
 import '../services/expense_service.dart';
 
 class StatsScreen extends StatefulWidget {
-  const StatsScreen({super.key});
+  final VoidCallback? onBackToCamera;
+
+  const StatsScreen({super.key, this.onBackToCamera});
 
   @override
   State<StatsScreen> createState() => _StatsScreenState();
@@ -52,6 +54,18 @@ class _StatsScreenState extends State<StatsScreen> {
         backgroundColor: const Color(0xFF0F0F11),
         elevation: 0,
         centerTitle: true,
+        leading: widget.onBackToCamera != null
+            ? IconButton(
+                key: const ValueKey('backToCameraFromStats'),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                tooltip: 'Quay lại chụp ảnh',
+                onPressed: widget.onBackToCamera,
+              )
+            : null,
         title: const Text(
           'THỐNG KÊ CHI TIÊU',
           style: TextStyle(
@@ -61,6 +75,18 @@ class _StatsScreenState extends State<StatsScreen> {
             letterSpacing: 2,
           ),
         ),
+        actions: [
+          if (widget.onBackToCamera != null)
+            IconButton(
+              key: const ValueKey('cameraButtonFromStats'),
+              icon: const Icon(
+                Icons.camera_alt_outlined,
+                color: Color(0xFFFFD233),
+              ),
+              tooltip: 'Quay lại chụp ảnh',
+              onPressed: widget.onBackToCamera,
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 90),

@@ -37,7 +37,7 @@ void main() {
     expect(find.text('Already have an account? '), findsOneWidget);
   });
 
-  testWidgets('shows loader and completes the curtain transition', (
+  testWidgets('shows loader and transitions directly to HomeScreen', (
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
@@ -52,10 +52,10 @@ void main() {
 
     expect(find.byKey(const ValueKey('waterDropLoader')), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 2200));
-    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Welcome to Crouket'), findsOneWidget);
+    expect(find.text('Chụp món đồ bạn vừa chi tiêu'), findsOneWidget);
   });
 
   testWidgets('forgot password flow works from login page', (tester) async {
@@ -119,7 +119,7 @@ void main() {
     expect(find.text('Enter your email'), findsOneWidget);
   });
 
-  testWidgets('can navigate from login welcome page to HomeScreen', (
+  testWidgets('can navigate directly from login to HomeScreen', (
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
@@ -131,14 +131,10 @@ void main() {
     await tester.enterText(fields.at(1), '123456');
     await tester.tap(find.byKey(const ValueKey('authButton')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 2200));
-    await tester.pump(const Duration(milliseconds: 1800));
-
-    expect(find.byKey(const ValueKey('enterAppButton')), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('enterAppButton')));
+    await tester.pump(const Duration(milliseconds: 1400));
     await tester.pumpAndSettle();
 
-    // Verify inside HomeScreen
+    // Verify inside HomeScreen directly
     expect(find.text('Chụp món đồ bạn vừa chi tiêu'), findsOneWidget);
     expect(find.byKey(const ValueKey('shutterButton')), findsOneWidget);
   });
@@ -168,6 +164,41 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('DANH MỤC & BẠN BÈ'), findsOneWidget);
       expect(find.byKey(const ValueKey('addCatButton')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Camera tab gestures: swipe down to feed, swipe right to stats, and back to camera button',
+    (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+      await tester.pumpAndSettle();
+
+      // Start on camera tab
+      expect(find.text('Chụp món đồ bạn vừa chi tiêu'), findsOneWidget);
+
+      // 1. Swipe up on camera tab -> should open Feed
+      await tester.drag(find.text('Chụp món đồ bạn vừa chi tiêu'), const Offset(0, -300));
+      await tester.pumpAndSettle();
+      expect(find.text('C R O U K E T   F E E D'), findsOneWidget);
+
+      // 2. Tap back button on Feed -> should return to Camera
+      final backFromFeed = find.byKey(const ValueKey('backToCameraFromFeed'));
+      expect(backFromFeed, findsOneWidget);
+      await tester.tap(backFromFeed);
+      await tester.pumpAndSettle();
+      expect(find.text('Chụp món đồ bạn vừa chi tiêu'), findsOneWidget);
+
+      // 3. Swipe right on camera tab -> should open Stats
+      await tester.drag(find.text('Chụp món đồ bạn vừa chi tiêu'), const Offset(300, 0));
+      await tester.pumpAndSettle();
+      expect(find.text('THỐNG KÊ CHI TIÊU'), findsOneWidget);
+
+      // 4. Tap back button on Stats -> should return to Camera
+      final backFromStats = find.byKey(const ValueKey('backToCameraFromStats'));
+      expect(backFromStats, findsOneWidget);
+      await tester.tap(backFromStats);
+      await tester.pumpAndSettle();
+      expect(find.text('Chụp món đồ bạn vừa chi tiêu'), findsOneWidget);
     },
   );
 

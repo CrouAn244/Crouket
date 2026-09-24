@@ -26,7 +26,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _success = false;
 
   @override
   void initState() {
@@ -37,7 +36,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
     _curtainController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1750),
+      duration: const Duration(milliseconds: 1400),
     );
     _introTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) _introController.forward();
@@ -68,15 +67,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     if (_isLoading || !(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 2200));
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
     await _curtainController.forward();
     if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      _success = true;
-    });
+
+    // Chuyển trực tiếp vào màn hình chính với hiệu ứng xuất hiện dần (fade-in)
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 800),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOutCubic,
+            ),
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -99,31 +112,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
           return Stack(
             children: [
-              if (_success)
-                const Positioned.fill(child: _WelcomePage())
-              else
-                Positioned.fill(
-                  child: _AuthForm(
-                    formKey: _formKey,
-                    nameController: _nameController,
-                    emailController: _emailController,
-                    passwordController: _passwordController,
-                    isLogin: _isLogin,
-                    isLoading: _isLoading,
-                    obscurePassword: _obscurePassword,
-                    revealProgress: formProgress,
-                    onTogglePassword: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                    onSubmit: _submit,
-                    onSwitchMode: _switchMode,
-                  ),
+              Positioned.fill(
+                child: _AuthForm(
+                  formKey: _formKey,
+                  nameController: _nameController,
+                  emailController: _emailController,
+                  passwordController: _passwordController,
+                  isLogin: _isLogin,
+                  isLoading: _isLoading,
+                  obscurePassword: _obscurePassword,
+                  revealProgress: formProgress,
+                  onTogglePassword: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                  onSubmit: _submit,
+                  onSwitchMode: _switchMode,
                 ),
-              if (!_success)
-                _AnimatedCurtain(
-                  screenSize: size,
-                  introProgress: intro,
-                  closeProgress: curtain,
-                ),
+              ),
+              _AnimatedCurtain(
+                screenSize: size,
+                introProgress: intro,
+                closeProgress: curtain,
+              ),
               if (_introController.value < 0.78 && curtain == 0)
                 _SplashTitle(progress: intro),
             ],
@@ -760,69 +769,3 @@ class _HeaderClipper extends CustomClipper<Path> {
   }
 }
 
-class _WelcomePage extends StatelessWidget {
-  const _WelcomePage();
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color(0xFFF8F7F5),
-      child: SafeArea(
-        child: Center(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 650),
-            curve: Curves.easeOutBack,
-            builder: (context, value, child) => Opacity(
-              opacity: value.clamp(0.0, 1.0),
-              child: Transform.scale(scale: 0.75 + value * 0.25, child: child),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircleAvatar(
-                  radius: 34,
-                  backgroundColor: Colors.black,
-                  child: Icon(
-                    Icons.check_rounded,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Welcome to Crouket',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 7),
-                const Text(
-                  'Everything is ready for you.',
-                  style: TextStyle(color: Color(0xFF8C8C8C), fontSize: 13),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  key: const ValueKey('enterAppButton'),
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
-                    );
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                  child: const Text('Vào ứng dụng Crouket'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

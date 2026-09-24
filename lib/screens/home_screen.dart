@@ -16,13 +16,46 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final _picker = ImagePicker();
   final _expenseService = ExpenseService();
+
+  late final AnimationController _appearanceController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
 
   int _currentTabIndex = 0; // 0: Camera, 1: Feed, 2: Thống kê, 3: Danh mục
   bool _isFlashOn = false;
   bool _isFrontCamera = false;
+  Offset _cameraPanOffset = Offset.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _appearanceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _appearanceController,
+      curve: Curves.easeOutCubic,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.02),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _appearanceController,
+      curve: Curves.easeOutCubic,
+    ));
+    _appearanceController.forward();
+  }
+
+  @override
+  void dispose() {
+    _appearanceController.dispose();
+    super.dispose();
+  }
 
   Future<void> _captureOrPickImage(ImageSource source) async {
     try {
@@ -105,6 +138,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 44,
                       height: 44,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 44,
+                        height: 44,
+                        color: const Color(0xFF2A2A30),
+                        child: const Icon(
+                          Icons.image_outlined,
+                          color: Colors.white38,
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ),
                   title: Text(
@@ -141,20 +184,49 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildCurrentTab() {
+    switch (_currentTabIndex) {
+      case 0:
+        return _buildCameraTab();
+      case 1:
+        return FeedScreen(
+          onOpenSnap: () => setState(() => _currentTabIndex = 0),
+        );
+      case 2:
+        return StatsScreen(
+          onBackToCamera: () => setState(() => _currentTabIndex = 0),
+        );
+      case 3:
+        return CategoriesScreen(
+          onBackToCamera: () => setState(() => _currentTabIndex = 0),
+        );
+      default:
+        return _buildCameraTab();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F11),
-      body: IndexedStack(
-        index: _currentTabIndex,
-        children: [
-          _buildCameraTab(),
-          FeedScreen(onOpenSnap: () => setState(() => _currentTabIndex = 0)),
-          const StatsScreen(),
-          const CategoriesScreen(),
-        ],
-      ),
-      bottomNavigationBar: Container(
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Scaffold(
+          backgroundColor: const Color(0xFF0F0F11),
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: KeyedSubtree(
+              key: ValueKey<int>(_currentTabIndex),
+              child: _buildCurrentTab(),
+            ),
+          ),
+          bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF141418),
           border: Border(
@@ -195,15 +267,40 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildCameraTab() {
     final latestTx = _expenseService.transactions.isNotEmpty
         ? _expenseService.transactions.first
         : null;
 
-    return SafeArea(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onPanStart: (_) => _cameraPanOffset = Offset.zero,
+      onPanUpdate: (details) => _cameraPanOffset += details.delta,
+      onPanEnd: (details) {
+        final dx = _cameraPanOffset.dx;
+        final dy = _cameraPanOffset.dy;
+        final vx = details.velocity.pixelsPerSecond.dx;
+        final vy = details.velocity.pixelsPerSecond.dy;
+
+        // Mọi thao tác cử chỉ chỉ áp dụng ở trang chụp ảnh
+        if (dy.abs() > dx.abs()) {
+          // Vuốt từ dưới lên -> sang trang feed của bạn bè
+          if (dy < -40 || vy < -150) {
+            setState(() => _currentTabIndex = 1);
+          }
+        } else {
+          // Vuốt màn sang phải -> hiện thống kê
+          if (dx > 40 || vx > 150) {
+            setState(() => _currentTabIndex = 2);
+          }
+        }
+      },
+      child: SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final maxVfSize = math.min(
@@ -511,6 +608,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? Image.network(
                                 latestTx.photoPath!,
                                 fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Center(
+                                  child: Icon(
+                                    Icons.view_carousel_rounded,
+                                    color: Colors.white54,
+                                    size: 22,
+                                  ),
+                                ),
                               )
                             : const Center(
                                 child: Icon(
@@ -530,6 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

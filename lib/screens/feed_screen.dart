@@ -69,6 +69,18 @@ class _FeedScreenState extends State<FeedScreen> {
         backgroundColor: const Color(0xFF0F0F11),
         elevation: 0,
         centerTitle: true,
+        leading: widget.onOpenSnap != null
+            ? IconButton(
+                key: const ValueKey('backToCameraFromFeed'),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                tooltip: 'Quay lại chụp ảnh',
+                onPressed: widget.onOpenSnap,
+              )
+            : null,
         title: const Text(
           'C R O U K E T   F E E D',
           style: TextStyle(
@@ -81,10 +93,12 @@ class _FeedScreenState extends State<FeedScreen> {
         actions: [
           if (widget.onOpenSnap != null)
             IconButton(
+              key: const ValueKey('cameraButtonFromFeed'),
               icon: const Icon(
                 Icons.camera_alt_outlined,
                 color: Color(0xFFFFD233),
               ),
+              tooltip: 'Quay lại chụp ảnh',
               onPressed: widget.onOpenSnap,
             ),
         ],

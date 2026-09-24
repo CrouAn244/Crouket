@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../services/expense_service.dart';
 
 class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key});
+  final VoidCallback? onBackToCamera;
+
+  const CategoriesScreen({super.key, this.onBackToCamera});
 
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
@@ -332,6 +334,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         backgroundColor: const Color(0xFF0F0F11),
         elevation: 0,
         centerTitle: true,
+        leading: widget.onBackToCamera != null
+            ? IconButton(
+                key: const ValueKey('backToCameraFromCategories'),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                tooltip: 'Quay lại chụp ảnh',
+                onPressed: widget.onBackToCamera,
+              )
+            : null,
         title: const Text(
           'DANH MỤC & BẠN BÈ',
           style: TextStyle(
@@ -341,6 +355,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             letterSpacing: 2,
           ),
         ),
+        actions: [
+          if (widget.onBackToCamera != null)
+            IconButton(
+              key: const ValueKey('cameraButtonFromCategories'),
+              icon: const Icon(
+                Icons.camera_alt_outlined,
+                color: Color(0xFFFFD233),
+              ),
+              tooltip: 'Quay lại chụp ảnh',
+              onPressed: widget.onBackToCamera,
+            ),
+        ],
       ),
       body: Column(
         children: [
